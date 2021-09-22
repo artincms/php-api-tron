@@ -17,16 +17,15 @@
         "tron-api",
         "tron-rest-api"
     ],
-
     "require": {
         "php": "^7.4",
+        "ext-bcmath": "*",
+        "ext-json": "*",
+        "artincms/php-web3": "dev-master",
         "comely-io/data-types": "^1.0",
         "guzzlehttp/guzzle": "^7.0",
-        "artincms/web3.php": "dev",
         "kornrunner/secp256k1": "^0.1.2",
-        "simplito/elliptic-php": "^1.0",
-        "ext-json": "*",
-        "ext-bcmath": "*"
+        "simplito/elliptic-php": "^1.0"
     },
 
     "require-dev": {
