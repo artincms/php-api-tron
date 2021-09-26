@@ -700,46 +700,43 @@ class Tron implements TronInterface
      */
     public function getTransactionsRelated(string $address, array $options = [])
     {
+        $err = false;
+
         $base_url = 'https://api.trongrid.io/v1/accounts/' . $address . '/transactions?';
         $url = $this->set_url_variables($base_url, $options);
-        $curl = curl_init();
-
-        curl_setopt_array($curl, [
-            CURLOPT_URL            => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING       => "",
-            CURLOPT_MAXREDIRS      => 10,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST  => "GET",
-            CURLOPT_HTTPHEADER     => [
-                "Accept: application/json"
-            ],
-        ]);
-        $response = json_decode(curl_exec($curl));
-        dd($response);
-        if (!in_array($direction, ['to', 'from']))
+        try
         {
-            throw new TronException('Invalid direction provided: Expected "to", "from"');
+            $curl = curl_init();
+            curl_setopt_array($curl, [
+                CURLOPT_URL            => $url,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING       => "",
+                CURLOPT_MAXREDIRS      => 10,
+                CURLOPT_TIMEOUT        => 30,
+                CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST  => "GET",
+                CURLOPT_HTTPHEADER     => [
+                    "Accept: application/json"
+                ],
+            ]);
+            $response = curl_exec($curl);
+            curl_close($curl);
+        } catch (Exception $exception)
+        {
+            $err = curl_error($curl);
+            curl_close($curl);
+
+            throw new TronException('Curl Has Error :' . $err . ' | with execption: ' . $exception->getMessage());
         }
 
-        if (!is_integer($limit) || $limit < 0 || ($offset && $limit < 1))
+        if ($response)
         {
-            throw new TronException('Invalid limit provided');
+            return json_decode($response);
         }
-
-        if (!is_integer($offset) || $offset < 0)
+        else
         {
-            throw new TronException('Invalid offset provided');
+            return false;
         }
-
-        $response = $this->manager->request(sprintf('walletextension/gettransactions%sthis', $direction), [
-            'account' => ['address' => $this->toHex($address)],
-            'limit'   => $limit,
-            'offset'  => $offset
-        ]);
-
-        return array_merge($response, ['direction' => $direction]);
     }
 
     /**
