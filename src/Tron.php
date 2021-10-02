@@ -668,6 +668,7 @@ class Tron implements TronInterface
         {
             $count_options = count($variables);
             $counter = 1;
+            $base_url .= '?';
             foreach ($variables as $key => $value)
             {
                 if ($value)
@@ -695,14 +696,18 @@ class Tron implements TronInterface
      *
      * @param string $address
      * @param array $options
+     * @param bool $trc20
      * @return array
      * @throws TronException
      */
-    public function getTransactionsRelated(string $address, array $options = [])
+    public function getTransactionsRelated(string $address, array $options = [], $trc20 = false)
     {
         $err = false;
-
-        $base_url = 'https://api.trongrid.io/v1/accounts/' . $address . '/transactions?';
+        $base_url = 'https://api.trongrid.io/v1/accounts/' . $address . '/transactions';
+        if ($trc20)
+        {
+            $base_url .= '/trc20';
+        }
         $url = $this->set_url_variables($base_url, $options);
         try
         {
@@ -1464,16 +1469,22 @@ class Tron implements TronInterface
     /**
      * Generate new address
      *
+     * @param string $private_key
      * @return TronAddress
      * @throws TronException
      */
-    public function generateAddress(): TronAddress
+    public function generateAddress($private_key = null): TronAddress
     {
         $ec = new EC('secp256k1');
 
         // Generate keys
-        $key = $ec->genKeyPair();
-        $priv = $ec->keyFromPrivate($key->priv);
+        if (!$private_key)
+        {
+            $key = $ec->genKeyPair();
+            $private_key = $key->priv;
+        }
+
+        $priv = $ec->keyFromPrivate($private_key);
         $pubKeyHex = $priv->getPublic(false, "hex");
 
         $pubKeyBin = hex2bin($pubKeyHex);
@@ -1487,6 +1498,23 @@ class Tron implements TronInterface
             'address_hex'    => $addressHex,
             'address_base58' => $addressBase58
         ]);
+    }
+
+    public function getPublicKey()
+    {
+        if ($this->privateKey)
+        {
+            $ec = new EC('secp256k1');
+            $priv = $ec->keyFromPrivate($this->privateKey);
+            $pubKeyHex = $priv->getPublic(false, "hex");
+
+            return $pubKeyHex;
+        }
+        else
+        {
+            throw new TronException('Missing private key');
+        }
+
     }
 
     /**
