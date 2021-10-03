@@ -7,7 +7,8 @@ use artincms\TronAPI\Exception\TronException;
 // Web3 plugin
 use Web3\Contracts\Ethabi;
 use Web3\Contracts\Types\
-{Address, Boolean, Bytes, DynamicBytes, Integer, Str, Uinteger};
+{Address, Boolean, Bytes, DynamicBytes, Integer, Str, Uinteger
+};
 
 class TransactionBuilder
 {
@@ -100,7 +101,12 @@ class TransactionBuilder
             'asset_name'    => $this->tron->stringUtf8toHex($tokenID),
             'amount'        => intval($amount)
         ]);
-
+        dd($tokenID,$transfer, [
+            'owner_address' => $this->tron->address2HexString($from),
+            'to_address'    => $this->tron->address2HexString($to),
+            'asset_name'    => $this->tron->stringUtf8toHex($tokenID),
+            'amount'        => intval($amount)
+        ]);
         if (array_key_exists('Error', $transfer))
         {
             throw new TronException($transfer['Error']);
