@@ -700,11 +700,11 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getTransactionsRelated(string $address, array $options = [], $trc20 = false)
+    public function getTransactionsRelated(string $address, array $options = [], $protocol = 'trc10')
     {
         $err = false;
         $base_url = 'https://api.trongrid.io/v1/accounts/' . $address . '/transactions';
-        if ($trc20)
+        if ($protocol === 'trc20')
         {
             $base_url .= '/trc20';
         }
