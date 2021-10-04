@@ -101,12 +101,6 @@ class TransactionBuilder
             'asset_name'    => $this->tron->stringUtf8toHex($tokenID),
             'amount'        => intval($amount)
         ]);
-        dd($tokenID,$transfer, [
-            'owner_address' => $this->tron->address2HexString($from),
-            'to_address'    => $this->tron->address2HexString($to),
-            'asset_name'    => $this->tron->stringUtf8toHex($tokenID),
-            'amount'        => intval($amount)
-        ]);
         if (array_key_exists('Error', $transfer))
         {
             throw new TronException($transfer['Error']);
