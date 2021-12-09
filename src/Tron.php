@@ -795,14 +795,21 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function sendTokenTransaction(string $to, float $amount, int $tokenID = null, string $from = null): array
+    public function sendTokenTransaction(string $to, float $amount, int $tokenID = null, string $from = null, $convert_to_tron = true): array
     {
+        if ($convert_to_tron)
+        {
+            $converted_to_tron_amount = intval($this->toTron($amount));
+        }
+        else
+        {
+            $converted_to_tron_amount = intval($amount);
+        }
         if (is_null($from))
         {
             $from = $this->address['hex'];
         }
-
-        $transaction = $this->transactionBuilder->sendToken($to, $this->toTron($amount), (string)$tokenID, $from);
+        $transaction = $this->transactionBuilder->sendToken($to, $converted_to_tron_amount, (string)$tokenID, $from);
         $signedTransaction = $this->signTransaction($transaction);
 
         $response = $this->sendRawTransaction($signedTransaction);
