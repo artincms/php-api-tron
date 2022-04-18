@@ -53,14 +53,14 @@ class TRC20Contract
      * The smart contract which issued TRC20 Token
      *
      * @var string
-    */
+     */
     private string $contractAddress;
 
     /**
      * ABI Data
      *
      * @var string|null
-    */
+     */
     private $abiData;
 
     /**
@@ -81,7 +81,7 @@ class TRC20Contract
      * Total Supply
      *
      * @var string|null
-    */
+     */
     private ?string $_totalSupply = null;
 
     /**
@@ -96,11 +96,24 @@ class TRC20Contract
         $this->_tron = $tron;
 
         // If abi is absent, then it takes by default
-        if(is_null($abi)) {
-            $abi = file_get_contents(__DIR__.'/trc20.json');
+        if (is_null($abi))
+        {
+            $abi = file_get_contents(__DIR__ . '/trc20.json');
         }
 
         $this->abiData = json_decode($abi, true);
+        $this->contractAddress = $contractAddress;
+    }
+
+    /**
+     * Create Trc20 Contract
+     *
+     * @param Tron $tron
+     * @param string $contractAddress
+     * @param string|null $abi
+     */
+    public function setContractAddress(string $contractAddress)
+    {
         $this->contractAddress = $contractAddress;
     }
 
@@ -136,9 +149,9 @@ class TRC20Contract
     public function array(): array
     {
         return [
-            'name' => $this->name(),
-            'symbol' => $this->symbol(),
-            'decimals' => $this->decimals(),
+            'name'        => $this->name(),
+            'symbol'      => $this->symbol(),
+            'decimals'    => $this->decimals(),
             'totalSupply' => $this->totalSupply(true)
         ];
     }
@@ -151,18 +164,21 @@ class TRC20Contract
      */
     public function name(): string
     {
-        if ($this->_name) {
+        if ($this->_name)
+        {
             return $this->_name;
         }
 
         $result = $this->trigger('name', null, []);
         $name = $result[0] ?? null;
 
-        if (!is_string($name)) {
+        if (!is_string($name))
+        {
             throw new TRC20Exception('Failed to retrieve TRC20 token name');
         }
 
         $this->_name = $this->cleanStr($name);
+
         return $this->_name;
     }
 
@@ -174,17 +190,20 @@ class TRC20Contract
      */
     public function symbol(): string
     {
-        if ($this->_symbol) {
+        if ($this->_symbol)
+        {
             return $this->_symbol;
         }
         $result = $this->trigger('symbol', null, []);
         $code = $result[0] ?? null;
 
-        if (!is_string($code)) {
+        if (!is_string($code))
+        {
             throw new TRC20Exception('Failed to retrieve TRRC20 token symbol');
         }
 
         $this->_symbol = $this->cleanStr($code);
+
         return $this->_symbol;
     }
 
@@ -198,12 +217,14 @@ class TRC20Contract
      */
     public function totalSupply(bool $scaled = true): string
     {
-        if (!$this->_totalSupply) {
+        if (!$this->_totalSupply)
+        {
 
             $result = $this->trigger('totalSupply', null, []);
             $totalSupply = $result[0]->toString() ?? null;
 
-            if (!is_string($totalSupply) || !preg_match('/^[0-9]+$/', $totalSupply)) {
+            if (!is_string($totalSupply) || !preg_match('/^[0-9]+$/', $totalSupply))
+            {
                 throw new TRC20Exception('Failed to retrieve TRC20 token totalSupply');
             }
 
@@ -221,18 +242,21 @@ class TRC20Contract
      */
     public function decimals(): int
     {
-        if ($this->_decimals) {
+        if ($this->_decimals)
+        {
             return $this->_decimals;
         }
 
         $result = $this->trigger('decimals', null, []);
         $scale = intval($result[0]->toString() ?? null);
 
-        if (is_null($scale)) {
+        if (is_null($scale))
+        {
             throw new TRC20Exception('Failed to retrieve TRC20 token decimals/scale value');
         }
 
         $this->_decimals = $scale;
+
         return $this->_decimals;
     }
 
@@ -247,14 +271,17 @@ class TRC20Contract
      */
     public function balanceOf(string $address = null, bool $scaled = true): string
     {
-        if(is_null($address))
+        if (is_null($address))
+        {
             $address = $this->_tron->address['base58'];
+        }
 
         $addr = str_pad($this->_tron->address2HexString($address), 64, "0", STR_PAD_LEFT);
         $result = $this->trigger('balanceOf', $address, [$addr]);
         $balance = $result[0]->toString();
 
-        if (!is_string($balance) || !preg_match('/^[0-9]+$/', $balance)) {
+        if (!is_string($balance) || !preg_match('/^[0-9]+$/', $balance))
+        {
             throw new TRC20Exception(
                 sprintf('Failed to retrieve TRC20 token balance of address "%s"', $addr)
             );
@@ -275,16 +302,23 @@ class TRC20Contract
      */
     public function transfer(string $to, string $amount, string $from = null): array
     {
-        if($from == null) {
+        if ($from == null)
+        {
             $from = $this->_tron->address['base58'];
         }
 
         $feeLimitInSun = bcmul((string)$this->feeLimit, (string)self::TRX_TO_SUN);
 
-        if (!is_numeric($this->feeLimit) OR $this->feeLimit <= 0) {
+        if (!is_numeric($this->feeLimit) or $this->feeLimit <= 0)
+        {
             throw new TRC20Exception('fee_limit is required.');
-        } else if($this->feeLimit > 1000) {
-            throw new TRC20Exception('fee_limit must not be greater than 1000 TRX.');
+        }
+        else
+        {
+            if ($this->feeLimit > 1000)
+            {
+                throw new TRC20Exception('fee_limit must not be greater than 1000 TRX.');
+            }
         }
 
         $tokenAmount = bcmul($amount, bcpow("10", (string)$this->decimals(), 0), 0);
@@ -328,7 +362,7 @@ class TRC20Contract
     public function getTransactionInfoByContract(array $options = []): array
     {
         return $this->_tron->getManager()
-            ->request("v1/contracts/{$this->contractAddress}/transactions?".http_build_query($options), [],'get');
+            ->request("v1/contracts/{$this->contractAddress}/transactions?" . http_build_query($options), [], 'get');
     }
 
     /**
@@ -339,7 +373,7 @@ class TRC20Contract
     public function getTRC20TokenHolderBalance(array $options = []): array
     {
         return $this->_tron->getManager()
-            ->request("v1/contracts/{$this->contractAddress}/tokens?".http_build_query($options), [],'get');
+            ->request("v1/contracts/{$this->contractAddress}/tokens?" . http_build_query($options), [], 'get');
     }
 
     /**
