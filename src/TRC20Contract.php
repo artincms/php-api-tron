@@ -91,7 +91,7 @@ class TRC20Contract
      * @param string $contractAddress
      * @param string|null $abi
      */
-    public function __construct(Tron $tron, string $contractAddress, string $abi = null)
+    public function __construct(Tron $tron, string $contractAddress, string $abi = null, $feeLimit = 10)
     {
         $this->_tron = $tron;
 
@@ -103,18 +103,29 @@ class TRC20Contract
 
         $this->abiData = json_decode($abi, true);
         $this->contractAddress = $contractAddress;
+
+        $this->feeLimit = $feeLimit;
     }
 
     /**
-     * Create Trc20 Contract
+     * Set Contract Address
      *
-     * @param Tron $tron
      * @param string $contractAddress
-     * @param string|null $abi
      */
     public function setContractAddress(string $contractAddress)
     {
         $this->contractAddress = $contractAddress;
+    }
+
+
+    /**
+     * Set Fee Limit
+     *
+     * @param integer $feeLimit
+     */
+    public function setFeeLimit(int $feeLimit)
+    {
+        $this->feeLimit = $feeLimit;
     }
 
     /**
@@ -300,22 +311,28 @@ class TRC20Contract
      * @throws TRC20Exception
      * @throws TronException
      */
-    public function transfer(string $to, string $amount, string $from = null): array
+    public function transfer(string $to, string $amount, string $from = null, int $fee_limit = null): array
     {
         if ($from == null)
         {
             $from = $this->_tron->address['base58'];
         }
 
-        $feeLimitInSun = bcmul((string)$this->feeLimit, (string)self::TRX_TO_SUN);
 
-        if (!is_numeric($this->feeLimit) or $this->feeLimit <= 0)
+        if ($fee_limit == null)
+        {
+            $fee_limit = $this->feeLimit;
+        }
+
+        $feeLimitInSun = bcmul((string)$fee_limit, (string)self::TRX_TO_SUN);
+
+        if (!is_numeric($fee_limit) or $fee_limit <= 0)
         {
             throw new TRC20Exception('fee_limit is required.');
         }
         else
         {
-            if ($this->feeLimit > 1000)
+            if ($fee_limit > 1000)
             {
                 throw new TRC20Exception('fee_limit must not be greater than 1000 TRX.');
             }
