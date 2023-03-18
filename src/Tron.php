@@ -116,7 +116,7 @@ class Tron implements TronInterface
         ?HttpProviderInterface $eventServer = null,
         ?HttpProviderInterface $signServer = null,
         ?HttpProviderInterface $explorer = null,
-        ?string $privateKey = null)
+        ?string                $privateKey = null)
     {
         if (!is_null($privateKey))
         {
@@ -149,7 +149,7 @@ class Tron implements TronInterface
         ?HttpProviderInterface $solidityNode = null,
         ?HttpProviderInterface $eventServer = null,
         ?HttpProviderInterface $signServer = null,
-        string $privateKey = null)
+        string                 $privateKey = null)
     {
         return new static($fullNode, $solidityNode, $eventServer, $signServer, $privateKey);
     }
@@ -700,8 +700,14 @@ class Tron implements TronInterface
      * @return array
      * @throws TronException
      */
-    public function getTransactionsRelated(string $address, array $options = [], $protocol = 'trc10')
+    public function getTransactionsRelated(string $address, array $options = [], $protocol = 'trc10', $headers = false)
     {
+        if ($headers === false)
+        {
+            $headers = [
+                "Accept: application/json"
+            ];
+        }
         $err = false;
         $base_url = 'https://api.trongrid.io/v1/accounts/' . $address . '/transactions';
         if ($protocol === 'trc20')
@@ -720,9 +726,7 @@ class Tron implements TronInterface
                 CURLOPT_TIMEOUT        => 30,
                 CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_1_1,
                 CURLOPT_CUSTOMREQUEST  => "GET",
-                CURLOPT_HTTPHEADER     => [
-                    "Accept: application/json"
-                ],
+                CURLOPT_HTTPHEADER     => $headers,
             ]);
             $response = curl_exec($curl);
             curl_close($curl);
@@ -1136,8 +1140,8 @@ class Tron implements TronInterface
     public function updateToken(
         string $description,
         string $url,
-        int $freeBandwidth = 0,
-        int $freeBandwidthLimit = 0,
+        int    $freeBandwidth = 0,
+        int    $freeBandwidthLimit = 0,
         string $owner_address = null)
     {
         if ($owner_address == null)
